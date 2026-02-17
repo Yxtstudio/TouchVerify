@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>长按按钮</title>
+    <style>
+        body { font-family: 'PingFang SC', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #121212; color: white; margin: 0; overflow: hidden; }
+        .container { text-align: center; background: #1e1e1e; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333; width: 300px; }
+        h2 { margin-bottom: 10px; font-size: 18px; color: #bbb; }
+        .target { font-size: 24px; color: #ff0055; margin-bottom: 30px; display: block; }
+        
+        /* 进度环 */
+        .progress-circle { width: 150px; height: 150px; margin: 0 auto 30px; position: relative; }
+        svg { transform: rotate(-90deg); }
+        circle { fill: none; stroke-width: 8; stroke-linecap: round; }
+        .bg { stroke: #333; }
+        .bar { stroke: #ff0055; stroke-dasharray: 440; stroke-dashoffset: 440; transition: stroke-dashoffset 0.1s linear; }
+
+        /* 按钮 */
+        #holdBtn { 
+            background: #ff0055; color: white; border: none; padding: 15px 30px; 
+            font-size: 18px; font-weight: bold; border-radius: 50px; cursor: pointer;
+            user-select: none; -webkit-user-select: none; transition: transform 0.2s;
+            box-shadow: 0 5px 15px rgba(255, 0, 85, 0.4);
+        }
+        #holdBtn:active { transform: scale(0.95); background: #d90048; }
+        
+        .timer { font-family: monospace; font-size: 20px; margin-top: 15px; color: #888; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>我们需要检测你是不是真人</h2>
+    <span class="target">长按按钮 10 秒</span>
+    
+    <div class="progress-circle">
+        <svg width="150" height="150">
+            <circle class="bg" cx="75" cy="75" r="70"></circle>
+            <circle id="progBar" class="bar" cx="75" cy="75" r="70"></circle>
+        </svg>
+        <div style="position: absolute; top:50%; left:50%; transform:translate(-50%,-50%);">
+            <div id="countdown" class="timer">10.0s</div>
+        </div>
+    </div>
+
+    <button id="holdBtn">长按此按钮</button>
+</div>
+
+<script>
+    const btn = document.getElementById('holdBtn');
+    const progBar = document.getElementById('progBar');
+    const countdown = document.getElementById('countdown');
+    
+    let timer = null;
+    let startTime = null;
+    let duration = 10000; // 10秒
+    const fullOffset = 440;
+
+    function startPress(e) {
+        e.preventDefault();
+        startTime = Date.now();
+        btn.innerText = "别松手！！";
+        
+        timer = setInterval(() => {
+            let elapsed = Date.now() - startTime;
+            let remaining = Math.max(0, (duration - elapsed) / 1000);
+            
+            // 更新文字
+            countdown.innerText = remaining.toFixed(1) + "s";
+            
+            // 更新圆环进度
+            let offset = fullOffset - (elapsed / duration) * fullOffset;
+            progBar.style.strokeDashoffset = Math.max(0, offset);
+
+            if (elapsed >= duration) {
+                clearInterval(timer);
+                alert("你是真人");
+                reset();
+            }
+        }, 50);
+    }
+
+    function endPress() {
+        if (timer) {
+            clearInterval(timer);
+            let elapsed = Date.now() - startTime;
+            if (elapsed < duration) {
+                alert("你不是真人");
+                reset();
+            }
+        }
+    }
+
+    function reset() {
+        clearInterval(timer);
+        timer = null;
+        btn.innerText = "长按此按钮";
+        countdown.innerText = "10.0s";
+        progBar.style.strokeDashoffset = fullOffset;
+    }
+
+    // 同时支持鼠标和手机触摸
+    btn.addEventListener('mousedown', startPress);
+    btn.addEventListener('mouseup', endPress);
+    btn.addEventListener('touchstart', startPress);
+    btn.addEventListener('touchend', endPress);
+</script>
+
+</body>
+</html>
